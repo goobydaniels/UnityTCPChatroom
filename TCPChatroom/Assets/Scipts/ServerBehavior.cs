@@ -8,13 +8,18 @@ public class ServerBehavior : MonoBehaviour
     NetworkDriver m_Driver;
     // This holds all connections to the server
     NativeList<NetworkConnection> m_Connections;
+    // Define TCP pipeline before connections are made
+    NetworkPipeline TCPPipeline;
 
     void Start()
     {
-        // Creates netowrk driver
-        m_Driver = NetworkDriver.Create();
+        // Creates TCP network driver
+        m_Driver = NetworkDriver.Create(new WebSocketNetworkInterface());
         // Populates connections list, setting the intial capasity to 16 clients, and marks the allocators as persistent
         m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
+
+        // Define TCP pipeline before connections are made
+        TCPPipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
 
         // Define endpoint to port 7777
         var endpoint = NetworkEndpoint.AnyIpv4.WithPort(7777);
@@ -74,7 +79,7 @@ public class ServerBehavior : MonoBehaviour
 
                     // To send data back a DataStreamWriter is used, a writer is created when BeginSend is used
                     // NetowrkPipeline.Null is the unreliable pipeline (udp) will need to use the reliable pipeline documented here: https://docs.unity3d.com/Packages/com.unity.transport@2.0/manual/pipelines-usage.html
-                    m_Driver.BeginSend(NetworkPipeline.Null, m_Connections[i], out var writer);
+                    m_Driver.BeginSend(TCPPipeline, m_Connections[i], out var writer);
                     writer.WriteUInt(number);
                     m_Driver.EndSend(writer);
                 }
