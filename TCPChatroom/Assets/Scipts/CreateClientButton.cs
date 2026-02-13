@@ -22,7 +22,7 @@ public class CreateClientButton : MonoBehaviour
         {
             client = Instantiate(clientPrefab);
 
-            client.GetComponent<ClientBehavior>().setUsername(usernameInputField.text);
+            client.GetComponent<ClientScript>().setUsername(usernameInputField.text);
         }
         else
         {

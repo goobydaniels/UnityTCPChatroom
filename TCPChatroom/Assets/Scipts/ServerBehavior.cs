@@ -12,9 +12,9 @@ public class ServerBehavior : MonoBehaviour
     // Define TCP pipeline before connections are made
     NetworkPipeline TCPPipeline;
 
-    private const string clientJoinedMessage = ": has joined the chat";
-    private const string clientLeftMessage = ": has left the chat";
-    private const string messageBreaker = ": ";
+    private string clientJoinedMessage = ": has joined the chat";
+    private string clientLeftMessage = ": has left the chat";
+    //private string messageBreaker = ": ";
 
     void Start()
     {
@@ -72,14 +72,17 @@ public class ServerBehavior : MonoBehaviour
 
             while ((cmd = m_Driver.PopEventForConnection(m_Connections[i], out stream)) != NetworkEvent.Type.Empty)
             {
-                // If the NetworkEvent is data
+                // If the NetworkEvent is connect
                 if (cmd == NetworkEvent.Type.Connect)
                 {
                     // Reads a string from the data stream
                     FixedString4096Bytes usernameJoined = stream.ReadFixedString4096();
+                    usernameJoined += clientJoinedMessage;
                     Debug.Log($"Got {usernameJoined} from a client");
 
-                    usernameJoined += clientJoinedMessage;
+                    //usernameJoined += clientJoinedMessage;
+
+                    Debug.Log(usernameJoined);
 
                     // To send data back a DataStreamWriter is used, a writer is created when BeginSend is used
                     // NetowrkPipeline.Null is the unreliable pipeline (udp) will need to use the reliable pipeline documented here: https://docs.unity3d.com/Packages/com.unity.transport@2.0/manual/pipelines-usage.html
