@@ -1,11 +1,28 @@
-using UnityEngine;
+using Unity.Collections;
 using Unity.Networking.Transport;
+using Unity.VisualScripting;
+using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class ClientBehavior : MonoBehaviour
 {
     NetworkDriver m_Driver;
     NetworkConnection m_Connection;
     NetworkPipeline TCPPipeline;
+
+    private string m_Username;
+
+    public void setUsername(string username)
+    {
+        m_Username = username;
+    }
+
+    public string getUsername()
+    {
+        return m_Username;
+    }
+
+    private string m_Message;
 
     void Start()
     {
@@ -37,35 +54,55 @@ public class ClientBehavior : MonoBehaviour
             // NetworkEvent.Type.Connect is called when the connect call has succeeded
             if (cmd == NetworkEvent.Type.Connect)
             {
-                Debug.Log("We are now connected to the server.");
+                /*
+                 * Here is where the client username needs to be sent to the server
+                 */
 
-                // When a connection is established between the client and the server, the number is sent, BeginSend/EndSend pattern together with the DataStreamWriter
-                uint value = 1;
+                Debug.Log("Client is now connected to the server.");
+
+                // When a connection is established between the client and the server, the client username is sent, BeginSend/EndSend pattern together with the DataStreamWriter
                 m_Driver.BeginSend(TCPPipeline, m_Connection, out var writer);
-                writer.WriteUInt(value);
+                writer.WriteFixedString4096(m_Username);
                 m_Driver.EndSend(writer);
             }
-            // When the NetworkEvent type is Data,read the value back from the server and then call the Disconnect method
+            // When the NetworkEvent type is Data, read the value back from the server and then call the Disconnect method
             else if (cmd == NetworkEvent.Type.Data)
             {
-                uint value = stream.ReadUInt();
-                Debug.Log($"Got the value {value} back from the server.");
-
-                m_Connection.Disconnect(m_Driver);
-                m_Connection = default;
+                FixedString4096Bytes message = stream.ReadFixedString4096();
+                Debug.Log($"Got the value {message} back from the server.");
             }
             // Handle disconnects
             else if (cmd == NetworkEvent.Type.Disconnect)
             {
-                Debug.Log("Client got disconnected from server.");
-                m_Connection = default;
+                /*
+                 * Here is where the username left message needs to be sent to the server
+                 */
+
+                m_Driver.BeginSend(TCPPipeline, m_Connection, out var writer);
+                writer.WriteFixedString4096(m_Username);
+                m_Driver.EndSend(writer);
+
+                DisconnectClient();
             }
         }
+    }
+
+    private void DisconnectClient()
+    {
+        m_Connection.Disconnect(m_Driver);
+        Debug.Log("Client got disconnected from server.");
+        m_Connection = default;
+    }
+
+    public void OnDisconnectButtonClick()
+    {
+        DisconnectClient();
     }
 
     // Dispose driver
     private void OnDestroy()
     {
         m_Driver.Dispose();
+        Debug.Log("On destroy");
     }
 }

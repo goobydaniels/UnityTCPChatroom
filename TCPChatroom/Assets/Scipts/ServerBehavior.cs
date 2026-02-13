@@ -1,6 +1,7 @@
-using UnityEngine;
+using TMPro;
 using Unity.Collections;
 using Unity.Networking.Transport;
+using UnityEngine;
 
 public class ServerBehavior : MonoBehaviour
 {
@@ -10,6 +11,10 @@ public class ServerBehavior : MonoBehaviour
     NativeList<NetworkConnection> m_Connections;
     // Define TCP pipeline before connections are made
     NetworkPipeline TCPPipeline;
+
+    private const string clientJoinedMessage = ": has joined the chat";
+    private const string clientLeftMessage = ": has left the chat";
+    private const string messageBreaker = ": ";
 
     void Start()
     {
@@ -67,26 +72,51 @@ public class ServerBehavior : MonoBehaviour
 
             while ((cmd = m_Driver.PopEventForConnection(m_Connections[i], out stream)) != NetworkEvent.Type.Empty)
             {
-                // If the NetwoekEvent is data
-                if (cmd == NetworkEvent.Type.Data)
+                // If the NetworkEvent is data
+                if (cmd == NetworkEvent.Type.Connect)
                 {
-                    // Reads a number from the data stream
-                    uint number = stream.ReadUInt();
-                    Debug.Log($"Got {number} from a client, adding 2 to it");
+                    // Reads a string from the data stream
+                    FixedString4096Bytes usernameJoined = stream.ReadFixedString4096();
+                    Debug.Log($"Got {usernameJoined} from a client");
 
-                    // Adds 2 to the number we recived
-                    number += 2;
+                    usernameJoined += clientJoinedMessage;
 
                     // To send data back a DataStreamWriter is used, a writer is created when BeginSend is used
                     // NetowrkPipeline.Null is the unreliable pipeline (udp) will need to use the reliable pipeline documented here: https://docs.unity3d.com/Packages/com.unity.transport@2.0/manual/pipelines-usage.html
                     m_Driver.BeginSend(TCPPipeline, m_Connections[i], out var writer);
-                    writer.WriteUInt(number);
+                    writer.WriteFixedString4096(usernameJoined);
+                    m_Driver.EndSend(writer);
+                }
+                else if (cmd == NetworkEvent.Type.Data)
+                {
+                    /*
+                     * This is where the messages need to be sent to each client
+                     */
+
+                    // Reads a string from the data stream
+                    FixedString4096Bytes message = stream.ReadFixedString4096();
+                    Debug.Log($"Got {message} from a client");
+
+                    // Message needs to have user name attached to the front
+
+                    // Send message back to clients
+                    m_Driver.BeginSend(TCPPipeline, m_Connections[i], out var writer);
+                    writer.WriteFixedString4096(message);
                     m_Driver.EndSend(writer);
                 }
                 // Handle disconnect
                 else if (cmd == NetworkEvent.Type.Disconnect)
                 {
+                    // Reads a string from the data stream
+                    FixedString4096Bytes usernameLeft = stream.ReadFixedString4096();
+                    Debug.Log($"Got {usernameLeft} from a client");
+
+                    usernameLeft += clientLeftMessage;
+
+                    // Add message to chat text box
+
                     Debug.Log("Client disconnected from the server.");
+
                     m_Connections[i] = default;
                     break;
                 }
