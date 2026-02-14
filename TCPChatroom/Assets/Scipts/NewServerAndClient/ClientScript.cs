@@ -29,6 +29,17 @@ public class ClientScript : MonoBehaviour
         return m_Username;
     }
 
+    public void OnDisconnectButtonClicked()
+    {
+        Debug.Log("I want to disconnect");
+
+        SendMessageToServer("I want to disconnect");
+
+        DisconnectClient();
+
+        Destroy(gameObject);
+    }
+
     void Start()
     {
         helper = helperPrefab.GetComponent<Helper>();
@@ -108,7 +119,7 @@ public class ClientScript : MonoBehaviour
         Debug.Log("Sent message to server: " + message);
     }
 
-    void OnApplicationQuit()
+    public void DisconnectClient()
     {
         if (stream != null)
             stream?.Close();
@@ -116,5 +127,10 @@ public class ClientScript : MonoBehaviour
             client?.Close();
         if (clientReceiveThread != null)
             clientReceiveThread?.Abort();
+    }
+
+    void OnApplicationQuit()
+    {
+        DisconnectClient();
     }
 }

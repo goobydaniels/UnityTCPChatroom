@@ -37,33 +37,44 @@ public class ServerScript : MonoBehaviour
     {
         try
         {
+            // Parse ip as IpAddress
             IPAddress localAddr = IPAddress.Parse(helper.ip);
+            // TCPListener created on ip address and port
             server = new TcpListener(localAddr, helper.port);
+            // Start the server
             server.Start();
 
+            // byte array declared to store data from the client
             byte[] buffer = new byte[1024];
             string data = null;
 
+            // Listen and accept new clients
             while (true)
             {
                 Debug.Log("Waiting for connection...");
+                // Waits and accepts an incoming connection
                 client = server.AcceptTcpClient();
                 Debug.Log("Connected!");
 
                 data = null;
+                // Gets netowrk stream assoicated with client
                 stream = client.GetStream();
 
                 int i;
 
+                // Used to read the data sent by client, reads into buffer and continues until there is no more data
                 while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
+                    // Converts byte array from buffer into a string using utf8, this is the data recieved from the client
                     data = Encoding.UTF8.GetString(buffer, 0, i);
                     Debug.Log("Received: " + data);
 
+                    // Makes responce string
                     string response = "Server response: " + data.ToString();
                     SendMessageToClient(message: response);
                 }
-                client.Close();
+                // Closes connection with client
+                //client.Close();
             }
         }
         catch (SocketException e)

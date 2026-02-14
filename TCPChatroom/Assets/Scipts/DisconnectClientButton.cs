@@ -3,20 +3,8 @@ using UnityEngine;
 
 public class DisconnectClientButton : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public void OnSelfClick()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    public void OnButtonClick()
-    {
-        
+        Destroy(gameObject);
     }
 }
