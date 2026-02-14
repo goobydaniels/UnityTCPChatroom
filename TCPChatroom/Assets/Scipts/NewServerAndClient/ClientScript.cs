@@ -3,21 +3,25 @@ using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using TMPro;
 
 public class ClientScript : MonoBehaviour
 {
     public GameObject helperPrefab;
+    public GameObject chatMessagePrefab;
     private Helper helper;
 
     private string serverIP; // Set this to your server's IP address.
     private int serverPort;             // Set this to your server's port.
-    private string messageToSend = "Hello Server!"; // The message to send.
 
     private TcpClient client;
     private NetworkStream stream;
     private Thread clientReceiveThread;
 
     private string m_Username;
+    [HideInInspector]
+    public GameObject chatBoxMessageZone;
+    public TMP_InputField messageInputField;
 
     public void setUsername(string username)
     {
@@ -40,6 +44,12 @@ public class ClientScript : MonoBehaviour
         Destroy(gameObject);
     }
 
+    public void OnSendMessageButtonClicked()
+    {
+        //string messageToSend = messageInputField.text;
+        SendMessageToServer(m_Username + ": "); // + messageToSend);
+    }
+
     void Start()
     {
         helper = helperPrefab.GetComponent<Helper>();
@@ -47,7 +57,6 @@ public class ClientScript : MonoBehaviour
         serverIP = helper.ip;
         serverPort = helper.port;
         ConnectToServer();
-        SendMessageToServer(m_Username);
     }
 
     void Update()
@@ -70,6 +79,7 @@ public class ClientScript : MonoBehaviour
             clientReceiveThread = new Thread(new ThreadStart(ListenForData));
             clientReceiveThread.IsBackground = true;
             clientReceiveThread.Start();
+            SendMessageToServer(m_Username);
         }
         catch (SocketException e)
         {
@@ -96,6 +106,9 @@ public class ClientScript : MonoBehaviour
                         // Convert byte array to string message.
                         string serverMessage = Encoding.UTF8.GetString(incomingData);
                         Debug.Log("Server message received: " + serverMessage);
+                        GameObject message = Instantiate(chatMessagePrefab);
+                        message.transform.SetParent(chatBoxMessageZone.transform, false);
+                        message.GetComponent<TextMeshProUGUI>().text = serverMessage;
                     }
                 }
             }
@@ -108,9 +121,14 @@ public class ClientScript : MonoBehaviour
 
     public void SendMessageToServer(string message)
     {
-        if (client == null || !client.Connected)
+        if (client == null)
         {
-            Debug.LogError("Client not connected to server.");
+            Debug.LogError("Client is null.");
+            return;
+        }
+        else if (!client.Connected)
+        {
+            Debug.LogError("Client is not connected to server.");
             return;
         }
 

@@ -45,5 +45,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClientScript
   helperPrefab: {fileID: 8143406550797205625, guid: 92677c2343fa06d408dffaad4cacd4a5, type: 3}
-  serverIP: 216.93.149.90
-  serverPort: 54010
+  chatMessagePrefab: {fileID: 5861026596361109501, guid: 40a5817bc5e9c0f4d9bc792eb740616d, type: 3}
+  chatBoxMessageZone: {fileID: 0}

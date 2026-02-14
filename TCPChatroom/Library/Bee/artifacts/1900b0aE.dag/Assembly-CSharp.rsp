@@ -457,14 +457,13 @@
 -analyzer:"C:/Program Files/Unity/Hub/Editor/6000.3.5f1/Editor/Data/Tools/BuildPipeline/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll"
 -analyzer:"C:/Program Files/Unity/Hub/Editor/6000.3.5f1/Editor/Data/Tools/BuildPipeline/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 -analyzer:"C:/Program Files/Unity/Hub/Editor/6000.3.5f1/Editor/Data/Tools/BuildPipeline/Unity.SourceGenerators/Unity.UIToolkit.SourceGenerator.dll"
-"Assets/Scipts/ClientBehavior.cs"
 "Assets/Scipts/CreateClientButton.cs"
 "Assets/Scipts/DisconnectClientButton.cs"
 "Assets/Scipts/NewServerAndClient/ClientScript.cs"
 "Assets/Scipts/NewServerAndClient/Helper.cs"
 "Assets/Scipts/NewServerAndClient/ServerScript.cs"
+"Assets/Scipts/PlaceholderTextHolder.cs"
 "Assets/Scipts/SendMessageButton.cs"
-"Assets/Scipts/ServerBehavior.cs"
 "Assets/TutorialInfo/Scripts/Readme.cs"
 -langversion:9.0
 /deterministic

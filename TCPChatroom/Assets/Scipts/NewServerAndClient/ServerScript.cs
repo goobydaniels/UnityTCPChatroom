@@ -70,7 +70,7 @@ public class ServerScript : MonoBehaviour
                     Debug.Log("Received: " + data);
 
                     // Makes responce string
-                    string response = "Server response: " + data.ToString();
+                    string response = data.ToString() + ": Has joined the chat";
                     SendMessageToClient(message: response);
                 }
                 // Closes connection with client

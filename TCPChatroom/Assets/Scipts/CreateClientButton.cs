@@ -7,10 +7,8 @@ public class CreateClientButton : MonoBehaviour
     public GameObject clientPrefab;
     public GameObject disconnectButtonPrefab;
     public GameObject chatPrefab;
-    public GameObject chatMessagePrefab;
 
     public TMP_InputField usernameInputField;
-    public GameObject MessageBoxPlaceHolderText;
 
     public Canvas canvas;
     public GameObject RightVerticalBox;
@@ -18,9 +16,8 @@ public class CreateClientButton : MonoBehaviour
     private GameObject client;
     private Button clientDisconnectButton;
     private GameObject chatbox;
-    private GameObject messageBox;
-    private Button disconnectButton;
     private string clientUsername;
+    private TextMeshProUGUI sendButtonText;
 
     public void OnButtonClick()
     {
@@ -30,7 +27,7 @@ public class CreateClientButton : MonoBehaviour
             clientUsername = usernameInputField.text;
             client = Instantiate(clientPrefab);
 
-            client.GetComponent<ClientScript>().setUsername(usernameInputField.text);
+            client.GetComponent<ClientScript>().setUsername(clientUsername);
 
             clientDisconnectButton = Instantiate(disconnectButtonPrefab).GetComponent<Button>();
             clientDisconnectButton.transform.SetParent(RightVerticalBox.transform, false);
@@ -39,10 +36,27 @@ public class CreateClientButton : MonoBehaviour
             chatbox = Instantiate(chatPrefab);
             chatbox.transform.SetParent(canvas.transform, false);
 
-            messageBox = Instantiate(chatMessagePrefab);
-            messageBox.transform.SetParent(chatbox.transform, false);
-            // need to make it so chat boxes also get destroyed when the client disconnects and make the place holder text display the clients username so you can tell which is which
-            //messageBox.
+            clientDisconnectButton.GetComponent<DisconnectClientButton>().ChatBox = chatbox;
+
+            Transform[] placeHolderTextObject = chatbox.GetComponentsInChildren<Transform>();
+
+            foreach (Transform placeHolder in placeHolderTextObject)
+            {
+                GameObject childGameObject = placeHolder.gameObject;
+                if (childGameObject.name == "SendMessageButtonText")
+                {
+                    sendButtonText = childGameObject.GetComponent<TextMeshProUGUI>();
+                    sendButtonText.text += clientUsername;
+                }
+                else if (childGameObject.name == "Content")
+                {
+                    client.GetComponent<ClientScript>().chatBoxMessageZone = childGameObject;
+                }
+                else if (childGameObject.name == "MessageInputField")
+                {
+                    client.GetComponent<ClientScript>().messageInputField = childGameObject.GetComponent<TMP_InputField>();
+                }
+            }
         }
         else
         {

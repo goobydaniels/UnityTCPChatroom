@@ -2,15 +2,12 @@ using UnityEngine;
 
 public class SendMessageButton : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [HideInInspector]
+    public GameObject Client;
+    private ClientScript clientScript;
+
     void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        clientScript = GetComponent<ClientScript>();
     }
 }
