@@ -1,7 +1,9 @@
+using NUnit.Framework;
 using System;
-using System.Text;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,6 +17,8 @@ public class ServerScript : MonoBehaviour
 
     public GameObject helperPrefab;
     private Helper helper;
+
+    private List<TcpClient> clients = new List<TcpClient>();
 
     // Initalizes a new thread that runs SetupServer, this creates a thread seperate from Unity's main thread
     private void Start()
@@ -44,55 +48,95 @@ public class ServerScript : MonoBehaviour
             // Start the server
             server.Start();
 
-            // byte array declared to store data from the client
-            byte[] buffer = new byte[1024];
-            string data = null;
-
-            // Listen and accept new clients
             while (true)
             {
                 Debug.Log("Waiting for connection...");
-                // Waits and accepts an incoming connection
-                client = server.AcceptTcpClient();
-                Debug.Log("Connected!");
+                TcpClient newClient = server.AcceptTcpClient();
+                Debug.Log("Client connected!");
 
-                data = null;
-                // Gets netowrk stream assoicated with client
-                stream = client.GetStream();
-
-                int i;
-
-                // Used to read the data sent by client, reads into buffer and continues until there is no more data
-                while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
+                lock (clients)
                 {
-                    // Converts byte array from buffer into a string using utf8, this is the data recieved from the client
-                    data = Encoding.UTF8.GetString(buffer, 0, i);
-                    Debug.Log("Received: " + data);
-
-                    // Makes responce string
-                    string response = data.ToString() + ": Has joined the chat";
-                    SendMessageToClient(message: response);
+                    clients.Add(newClient);
                 }
-                // Closes connection with client
-                //client.Close();
+
+                Thread clientThread = new Thread(() => HandleClient(newClient));
+                clientThread.Start();
             }
         }
         catch (SocketException e)
         {
             Debug.Log("SocketException: " + e);
         }
+    }
+
+    private void HandleClient(TcpClient client)
+    {
+        NetworkStream stream = client.GetStream();
+        byte[] buffer = new byte[1024];
+
+        try
+        {
+            int bytesRead;
+
+            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+            {
+                string data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                Debug.Log("Received: " + data);
+
+                BroadcastMessage(data);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.Log("Client disconnected: " + e.Message);
+        }
         finally
         {
-            server.Stop();
+            lock (clients)
+            {
+                clients.Remove(client);
+            }
+
+            stream.Close();
+            client.Close();
         }
+    }
+
+    private void BroadcastMessage(string message)
+    {
+        byte[] msg = Encoding.UTF8.GetBytes(message);
+
+        lock (clients)
+        {
+            foreach (TcpClient client in clients)
+            {
+                try
+                {
+                    NetworkStream stream = client.GetStream();
+                    stream.Write(msg, 0, msg.Length);
+                }
+                catch
+                {
+                    // Ignore broken clients
+                }
+            }
+        }
+
+        Debug.Log("Broadcasted: " + message);
     }
 
     private void OnApplicationQuit()
     {
-        stream.Close();
-        client.Close();
-        server.Stop();
-        thread.Abort();
+        lock (clients)
+        {
+            foreach (TcpClient client in clients)
+            {
+                client.Close();
+            }
+        }
+
+        server?.Stop();
+        thread?.Abort();
     }
 
     public void SendMessageToClient(string message)

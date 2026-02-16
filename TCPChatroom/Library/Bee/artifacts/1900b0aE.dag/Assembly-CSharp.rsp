@@ -133,6 +133,7 @@
 -define:ENABLE_TILEMAP
 -define:ENABLE_TIMELINE
 -define:ENABLE_INPUT_SYSTEM
+-define:ENABLE_LEGACY_INPUT_MANAGER
 -define:TEXTCORE_FONT_ENGINE_1_5_OR_NEWER
 -define:TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER
 -define:TEXTCORE_FONT_ENGINE_1_6_OR_NEWER
@@ -462,6 +463,7 @@
 "Assets/Scipts/NewServerAndClient/ClientScript.cs"
 "Assets/Scipts/NewServerAndClient/Helper.cs"
 "Assets/Scipts/NewServerAndClient/ServerScript.cs"
+"Assets/Scipts/NewServerAndClient/UnityMainThreadDispatcher.cs"
 "Assets/Scipts/PlaceholderTextHolder.cs"
 "Assets/Scipts/SendMessageButton.cs"
 "Assets/TutorialInfo/Scripts/Readme.cs"

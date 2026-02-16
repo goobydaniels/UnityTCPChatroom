@@ -21,11 +21,11 @@ public class CreateClientButton : MonoBehaviour
 
     public void OnButtonClick()
     {
-        if (usernameInputField.text != null)
+        if (!string.IsNullOrEmpty(usernameInputField.text))
         {
-            
             clientUsername = usernameInputField.text;
             client = Instantiate(clientPrefab);
+            usernameInputField.text = "";
 
             client.GetComponent<ClientScript>().setUsername(clientUsername);
 
@@ -36,7 +36,10 @@ public class CreateClientButton : MonoBehaviour
             chatbox = Instantiate(chatPrefab);
             chatbox.transform.SetParent(canvas.transform, false);
 
-            clientDisconnectButton.GetComponent<DisconnectClientButton>().ChatBox = chatbox;
+            DisconnectClientButton disconnectScript = clientDisconnectButton.GetComponent<DisconnectClientButton>();
+
+            disconnectScript.ChatBox = chatbox;
+            disconnectScript.client = client.GetComponent<ClientScript>();
 
             Transform[] placeHolderTextObject = chatbox.GetComponentsInChildren<Transform>();
 
@@ -46,7 +49,7 @@ public class CreateClientButton : MonoBehaviour
                 if (childGameObject.name == "SendMessageButtonText")
                 {
                     sendButtonText = childGameObject.GetComponent<TextMeshProUGUI>();
-                    sendButtonText.text += clientUsername;
+                    sendButtonText.text = sendButtonText.text + clientUsername + " (Press Enter to send)";
                 }
                 else if (childGameObject.name == "Content")
                 {

@@ -10,6 +10,7 @@ public class ClientScript : MonoBehaviour
     public GameObject helperPrefab;
     public GameObject chatMessagePrefab;
     private Helper helper;
+    private string messageToSend;
 
     private string serverIP; // Set this to your server's IP address.
     private int serverPort;             // Set this to your server's port.
@@ -33,21 +34,17 @@ public class ClientScript : MonoBehaviour
         return m_Username;
     }
 
-    public void OnDisconnectButtonClicked()
-    {
-        Debug.Log("I want to disconnect");
-
-        SendMessageToServer("I want to disconnect");
-
-        DisconnectClient();
-
-        Destroy(gameObject);
-    }
-
     public void OnSendMessageButtonClicked()
     {
-        //string messageToSend = messageInputField.text;
-        SendMessageToServer(m_Username + ": "); // + messageToSend);
+        if (string.IsNullOrEmpty(messageToSend))
+        {
+            Debug.Log("Message is empty!");
+        }
+        else
+        {
+            SendMessageToServer(m_Username + ": " + messageToSend);
+            messageInputField.text = "";
+        }
     }
 
     void Start()
@@ -59,13 +56,26 @@ public class ClientScript : MonoBehaviour
         ConnectToServer();
     }
 
-    void Update()
+    private void Update()
     {
-        //disable this if you are sending from another script or a button
-        //if (Input.GetKeyDown(KeyCode.Return))
-        //{
-        //    SendMessageToServer(messageToSend);
-        //}
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            if (string.IsNullOrEmpty(messageInputField.text))
+            {
+                Debug.Log("Message is empty!");
+            }
+            else
+            {
+                messageToSend = messageInputField.text;
+                SendMessageToServer(m_Username + ": " + messageToSend);
+                messageInputField.text = "";
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            DisconnectClient();
+        }
     }
 
     void ConnectToServer()
@@ -79,7 +89,8 @@ public class ClientScript : MonoBehaviour
             clientReceiveThread = new Thread(new ThreadStart(ListenForData));
             clientReceiveThread.IsBackground = true;
             clientReceiveThread.Start();
-            SendMessageToServer(m_Username);
+            SendMessageToServer(m_Username + ": has joined the chat");
+            Debug.Log("Instance ID: " + GetInstanceID());
         }
         catch (SocketException e)
         {
@@ -106,9 +117,13 @@ public class ClientScript : MonoBehaviour
                         // Convert byte array to string message.
                         string serverMessage = Encoding.UTF8.GetString(incomingData);
                         Debug.Log("Server message received: " + serverMessage);
-                        GameObject message = Instantiate(chatMessagePrefab);
-                        message.transform.SetParent(chatBoxMessageZone.transform, false);
-                        message.GetComponent<TextMeshProUGUI>().text = serverMessage;
+
+                        UnityMainThreadDispatcher.Enqueue(() =>
+                        {
+                            GameObject message = Instantiate(chatMessagePrefab);
+                            message.transform.SetParent(chatBoxMessageZone.transform, false);
+                            message.GetComponent<TextMeshProUGUI>().text = serverMessage;
+                        });
                     }
                 }
             }
@@ -139,12 +154,18 @@ public class ClientScript : MonoBehaviour
 
     public void DisconnectClient()
     {
+        SendMessageToServer(m_Username + ": has left the chat");
+
+        Debug.Log("Instance ID: " + GetInstanceID());
+
         if (stream != null)
             stream?.Close();
         if (client != null)
             client?.Close();
         if (clientReceiveThread != null)
             clientReceiveThread?.Abort();
+
+        Destroy(gameObject);
     }
 
     void OnApplicationQuit()
